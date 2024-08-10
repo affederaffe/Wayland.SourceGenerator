@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Wayland.SourceGenerator", "Wayland.SourceGenerator\Wayland.SourceGenerator.csproj", "{014C4832-456F-480B-BAA0-967116E90152}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DebugSourceGenerator", "DebugSourceGenerator\DebugSourceGenerator.csproj", "{08D7FD92-0708-4C18-9003-E96D74B2DF86}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{014C4832-456F-480B-BAA0-967116E90152}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{014C4832-456F-480B-BAA0-967116E90152}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{014C4832-456F-480B-BAA0-967116E90152}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{014C4832-456F-480B-BAA0-967116E90152}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08D7FD92-0708-4C18-9003-E96D74B2DF86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08D7FD92-0708-4C18-9003-E96D74B2DF86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08D7FD92-0708-4C18-9003-E96D74B2DF86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08D7FD92-0708-4C18-9003-E96D74B2DF86}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
