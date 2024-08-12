@@ -14,7 +14,7 @@
     </ItemGroup>
     
     <ItemGroup>
-        <AdditionalFiles Include="./**/*.xml" />
+        <AdditionalFiles Include="WaylandXml/*.xml" />
     </ItemGroup>
 
 </Project>
