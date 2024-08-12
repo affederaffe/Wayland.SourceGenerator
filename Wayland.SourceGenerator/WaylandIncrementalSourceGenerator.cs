@@ -37,52 +37,54 @@ namespace Wayland.SourceGenerator
 
             context.RegisterSourceOutput(generatorProvider.Collect(), static (productionContext, protocols) =>
             {
-                if (!TryCreateInterfaceToProtocolDict(protocols, out FrozenDictionary<string, WaylandProtocol>? interfaceToProtocolDict, out string? duplicateProtocolName))
+                try
                 {
-                    productionContext.ReportDiagnostic(
-                        Diagnostic.Create(
-                            new DiagnosticDescriptor("WL0001",
-                                "Duplicate protocol definition",
-                                "Duplicate protocol definition found for protocol {0}",
-                                string.Empty,
-                                DiagnosticSeverity.Error,
-                                true),
-                            null,
-                            duplicateProtocolName));
-                    return;
-                }
+                    int allInterfacesLength = GetInterfacesCount(protocols);
+                    FrozenDictionary<string, WaylandProtocol> interfaceToProtocolDict = CreateInterfaceToProtocolDict(protocols, allInterfacesLength);
+                    (string, CompilationUnitSyntax)[] sources = new (string, CompilationUnitSyntax)[allInterfacesLength];
 
-                foreach (WaylandProtocol wlProtocol in protocols)
-                {
-                    SyntaxToken namespaceName = WaylandSourceGenerator.GetNamespaceName(wlProtocol);
-                    foreach (WaylandInterface wlInterface in wlProtocol.Interfaces)
+                    int j = 0;
+                    foreach (WaylandProtocol wlProtocol in protocols)
                     {
-                        SyntaxToken typeName = WaylandSourceGenerator.GetClassTypeName(wlInterface.Name);
-                        ClassDeclarationSyntax cl = ClassDeclaration(typeName)
-                            .AddModifiers(
-                                Token(SyntaxKind.InternalKeyword),
-                                Token(SyntaxKind.SealedKeyword),
-                                Token(SyntaxKind.UnsafeKeyword),
-                                Token(SyntaxKind.PartialKeyword))
-                            .WithBaseList(
-                                BaseList(
-                                    SingletonSeparatedList<BaseTypeSyntax>(
-                                        SimpleBaseType(
-                                            IdentifierName("WlProxy")))))
-                            .WithSummary(wlInterface.Description)
-                            .WithSignature(wlInterface, interfaceToProtocolDict!)
-                            .WithConstructor()
-                            .WithEnums(wlInterface)
-                            .WithEvents(wlInterface, wlProtocol, interfaceToProtocolDict!)
-                            .WithRequests(wlInterface, wlProtocol, interfaceToProtocolDict!)
-                            .WithFactory(wlInterface, interfaceToProtocolDict!);
-                        NamespaceDeclarationSyntax namespaceDeclaration = NamespaceDeclaration(
-                                IdentifierName(namespaceName))
-                            .WithMembers(
-                                SingletonList<MemberDeclarationSyntax>(cl));
-                        CompilationUnitSyntax compilationUnit = WaylandSourceGenerator.MakeCompilationUnit(namespaceDeclaration);
-                        productionContext.AddSource($"{namespaceName.Text}.{typeName}.g.cs", compilationUnit.GetText(Encoding.UTF8));
+                        SyntaxToken nsName = WaylandSourceGenerator.GetNamespaceName(wlProtocol);
+                        foreach (WaylandInterface wlInterface in wlProtocol.Interfaces)
+                        {
+                            SyntaxToken typeName = WaylandSourceGenerator.GetClassTypeName(wlInterface.Name);
+                            ClassDeclarationSyntax cl = ClassDeclaration(typeName)
+                                .AddModifiers(
+                                    Token(SyntaxKind.InternalKeyword),
+                                    Token(SyntaxKind.SealedKeyword),
+                                    Token(SyntaxKind.UnsafeKeyword),
+                                    Token(SyntaxKind.PartialKeyword))
+                                .WithBaseList(
+                                    BaseList(
+                                        SingletonSeparatedList<BaseTypeSyntax>(
+                                            SimpleBaseType(
+                                                IdentifierName("WlProxy")))))
+                                .WithSummary(wlInterface.Description)
+                                .WithSignature(wlInterface, wlProtocol, interfaceToProtocolDict)
+                                .WithConstructor()
+                                .WithEnums(wlInterface)
+                                .WithEvents(wlInterface, wlProtocol, interfaceToProtocolDict)
+                                .WithRequests(wlInterface, wlProtocol, interfaceToProtocolDict)
+                                .WithFactory(wlInterface, wlProtocol, interfaceToProtocolDict);
+                            NamespaceDeclarationSyntax ns = NamespaceDeclaration(
+                                    IdentifierName(nsName))
+                                .WithMembers(
+                                    SingletonList<MemberDeclarationSyntax>(cl));
+                            sources[j++] = ($"{nsName.Text}.{typeName.Text}.g.cs", WaylandSourceGenerator.MakeCompilationUnit(ns));
+                        }
                     }
+
+                    productionContext.AddSource("Wayland.SourceGenerator.WlDisplay.g.cs", WaylandSourceGenerator.WlDisplayClass);
+                    productionContext.AddSource("Wayland.SourceGenerator.WlRegistry.g.cs", WaylandSourceGenerator.WlRegistryClass);
+
+                    foreach ((string HintName, CompilationUnitSyntax CompilationUnit) source in sources)
+                        productionContext.AddSource(source.HintName, source.CompilationUnit.GetText(Encoding.UTF8));
+                }
+                catch (DiagnosticException e)
+                {
+                    productionContext.ReportDiagnostic(e.Diagnostic);
                 }
             });
 
@@ -93,9 +95,7 @@ namespace Wayland.SourceGenerator
                 initializationContext.AddSource("Wayland.SourceGenerator.IBindFactory.g.cs", WaylandSourceGenerator.BindFactoryInterface);
                 initializationContext.AddSource("Wayland.SourceGenerator.WlProxy.g.cs", WaylandSourceGenerator.WlProxyClass);
                 initializationContext.AddSource("Wayland.SourceGenerator.WlProxyWrapper.g.cs", WaylandSourceGenerator.WlProxyWrapperClass);
-                initializationContext.AddSource("Wayland.SourceGenerator.WlDisplay.g.cs", WaylandSourceGenerator.WlDisplayClass);
                 initializationContext.AddSource("Wayland.SourceGenerator.WlEventQueue.g.cs", WaylandSourceGenerator.WlEventQueueClass);
-                initializationContext.AddSource("Wayland.SourceGenerator.WlRegistry.g.cs", WaylandSourceGenerator.WlRegistryClass);
                 initializationContext.AddSource("Wayland.SourceGenerator.Utf8Buffer.g.cs", WaylandSourceGenerator.Utf8BufferClass);
                 initializationContext.AddSource("Wayland.SourceGenerator.WlInterface.g.cs", WaylandSourceGenerator.WlInterfaceStruct);
                 initializationContext.AddSource("Wayland.SourceGenerator.WlMessage.g.cs", WaylandSourceGenerator.WlMessageStruct);
@@ -105,27 +105,28 @@ namespace Wayland.SourceGenerator
             });
         }
 
-        private static bool TryCreateInterfaceToProtocolDict(ImmutableArray<WaylandProtocol> wlProtocols, out FrozenDictionary<string, WaylandProtocol>? interfaceToProtocolDict, out string? duplicateProtocolName)
+        private static FrozenDictionary<string, WaylandProtocol> CreateInterfaceToProtocolDict(ImmutableArray<WaylandProtocol> wlProtocols, int allInterfacesLength)
         {
-            Dictionary<string, WaylandProtocol> mutableInterfaceToProtocolDict = new(wlProtocols.Length);
+            Dictionary<string, WaylandProtocol> mutableInterfaceToProtocolDict = new(allInterfacesLength);
             foreach (WaylandProtocol wlProtocol in wlProtocols)
             {
                 foreach (WaylandInterface wlInterface in wlProtocol.Interfaces)
                 {
                     if (mutableInterfaceToProtocolDict.ContainsKey(wlInterface.Name))
-                    {
-                        duplicateProtocolName = wlProtocol.Name;
-                        interfaceToProtocolDict = null;
-                        return false;
-                    }
-
+                        throw new DiagnosticException(WaylandSourceGenerator.MakeDuplicateProtocolDefinitionDiagnostic(wlInterface.Name));
                     mutableInterfaceToProtocolDict.Add(wlInterface.Name, wlProtocol);
                 }
             }
 
-            duplicateProtocolName = null;
-            interfaceToProtocolDict = mutableInterfaceToProtocolDict.ToFrozenDictionary();
-            return true;
+            return mutableInterfaceToProtocolDict.ToFrozenDictionary();
+        }
+
+        private static int GetInterfacesCount(ImmutableArray<WaylandProtocol> protocols)
+        {
+            int sum = 0;
+            foreach (WaylandProtocol protocol in protocols)
+                sum += protocol.Interfaces.Length;
+            return sum;
         }
     }
 }

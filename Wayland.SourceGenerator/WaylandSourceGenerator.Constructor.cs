@@ -29,8 +29,7 @@ namespace Wayland.SourceGenerator
                                 Argument(
                                     IdentifierName("handle")),
                                 Argument(
-                                    IdentifierName("version"))
-                            ]))))
+                                    IdentifierName("version"))]))))
                     .WithBody(
                         Block()));
     }

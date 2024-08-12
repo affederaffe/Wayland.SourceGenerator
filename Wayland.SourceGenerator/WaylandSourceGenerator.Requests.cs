@@ -27,7 +27,8 @@ namespace Wayland.SourceGenerator
 
                 bool isCtor = newIdArgument is not null;
                 TypeSyntax ctorType = newIdArgument is not null
-                    ? GetQualifiedClassType(newIdArgument.Interface!, interfaceToProtocolDict)
+                    ? IdentifierName(
+                        GetClassTypeName(newIdArgument.Interface!))
                     : PredefinedType(
                         Token(SyntaxKind.VoidKeyword));
 
@@ -82,7 +83,7 @@ namespace Wayland.SourceGenerator
                                     arguments = arguments.Add(
                                         CastExpression(
                                             parameterType, IdentifierName(argumentName)));
-                                    parameterType = GetQualifiedEnumType(wlArgument.Enum, interfaceToProtocolDict);
+                                    parameterType = GetQualifiedEnumType(wlArgument.Enum, wlProtocol, interfaceToProtocolDict);
                                 }
                                 else
                                 {
@@ -161,7 +162,7 @@ namespace Wayland.SourceGenerator
                                     PrefixUnaryExpression(SyntaxKind.AddressOfExpression, IdentifierName(wlArrayName)));
                                 break;
                             case WaylandArgumentTypes.Object:
-                                parameterType = GetQualifiedClassType(wlArgument.Interface!, interfaceToProtocolDict);
+                                parameterType = GetQualifiedClassType(wlArgument.Interface!, wlProtocol, interfaceToProtocolDict);
 
                                 if (wlArgument.AllowNull)
                                 {
@@ -222,12 +223,12 @@ namespace Wayland.SourceGenerator
                 {
                     args = args.AddArguments(
                         Argument(
-                            GetWlInterfaceRefFor(newIdArgument!.Interface!, interfaceToProtocolDict)),
+                            GetWlInterfaceRefFor(newIdArgument!.Interface!, wlProtocol, interfaceToProtocolDict)),
                         Argument(
                             CastExpression(
                                 PredefinedType(
                                     Token(SyntaxKind.UIntKeyword)),
-                                GetWlInterfaceVersionFor(newIdArgument.Interface!, interfaceToProtocolDict))));
+                                GetWlInterfaceVersionFor(newIdArgument.Interface!, wlProtocol, interfaceToProtocolDict))));
                 }
 
                 InvocationExpressionSyntax callExpr = InvocationExpression(
@@ -258,7 +259,7 @@ namespace Wayland.SourceGenerator
                                         Argument(
                                             IdentifierName("__ret")),
                                         Argument(
-                                            GetWlInterfaceVersionFor(newIdArgument!.Interface!, interfaceToProtocolDict))))));
+                                            GetWlInterfaceVersionFor(newIdArgument!.Interface!, wlProtocol, interfaceToProtocolDict))))));
                 }
                 else
                 {

@@ -123,7 +123,7 @@ namespace Wayland.SourceGenerator
             Identifier(
                 $"{Pascalize(wlEnumName.AsSpan())}Enum");
 
-        private static TypeSyntax GetQualifiedEnumType(string name, FrozenDictionary<string, WaylandProtocol> interfaceToProtocolDict)
+        private static TypeSyntax GetQualifiedEnumType(string name, WaylandProtocol wlProtocol, FrozenDictionary<string, WaylandProtocol> interfaceToProtocolDict)
         {
             string[] parts = name.Split('.');
             if (parts.Length == 1)
@@ -132,23 +132,30 @@ namespace Wayland.SourceGenerator
                     GetEnumTypeName(parts[0]));
             }
 
+            if (!interfaceToProtocolDict.TryGetValue(parts[0], out WaylandProtocol? foreignProtocol))
+                throw new DiagnosticException(MakeMissingProtocolDiagnostic(parts[0], wlProtocol.Name));
+
             return QualifiedName(
                 QualifiedName(
                     IdentifierName(
-                        GetNamespaceName(
-                            interfaceToProtocolDict[parts[0]])),
+                        GetNamespaceName(foreignProtocol)),
                     IdentifierName(
                         GetClassTypeName(parts[0]))),
                 IdentifierName(
                     GetEnumTypeName(parts[1])));
         }
 
-        private static QualifiedNameSyntax GetQualifiedClassType(string name, FrozenDictionary<string, WaylandProtocol> interfaceToProtocolDict) =>
-            QualifiedName(
+        private static QualifiedNameSyntax GetQualifiedClassType(string name, WaylandProtocol wlProtocol, FrozenDictionary<string, WaylandProtocol> interfaceToProtocolDict)
+        {
+            if (!interfaceToProtocolDict.TryGetValue(name, out WaylandProtocol? foreignProtocol))
+                throw new DiagnosticException(MakeMissingProtocolDiagnostic(wlProtocol.Name, name));
+
+            return QualifiedName(
                 IdentifierName(
-                    GetNamespaceName(interfaceToProtocolDict[name])),
+                    GetNamespaceName(foreignProtocol)),
                 IdentifierName(
                     GetClassTypeName(name)));
+        }
 
         private static string SanitizeIdentifier(string identifier)
         {
@@ -159,24 +166,24 @@ namespace Wayland.SourceGenerator
             return identifier;
         }
 
-        private static InvocationExpressionSyntax GetWlInterfaceAddressFor(string wlInterfaceName, FrozenDictionary<string, WaylandProtocol> interfaceToProtocolDict)
+        private static InvocationExpressionSyntax GetWlInterfaceAddressFor(string wlInterfaceName, WaylandProtocol wlProtocol, FrozenDictionary<string, WaylandProtocol> interfaceToProtocolDict)
             => InvocationExpression(
                 MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                     IdentifierName("WlInterface"), IdentifierName("GeneratorAddressOf")), ArgumentList(
                     SingletonSeparatedList(
                         Argument(
-                            GetWlInterfaceRefFor(wlInterfaceName, interfaceToProtocolDict)))));
+                            GetWlInterfaceRefFor(wlInterfaceName, wlProtocol, interfaceToProtocolDict)))));
 
-        private static RefExpressionSyntax GetWlInterfaceRefFor(string wlInterfaceName, FrozenDictionary<string, WaylandProtocol> interfaceToProtocolDict) =>
+        private static RefExpressionSyntax GetWlInterfaceRefFor(string wlInterfaceName, WaylandProtocol wlProtocol, FrozenDictionary<string, WaylandProtocol> interfaceToProtocolDict) =>
             RefExpression(
                 MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                    GetQualifiedClassType(wlInterfaceName, interfaceToProtocolDict),
+                    GetQualifiedClassType(wlInterfaceName, wlProtocol, interfaceToProtocolDict),
                     IdentifierName("WlInterface")));
 
-        private static MemberAccessExpressionSyntax GetWlInterfaceVersionFor(string wlInterfaceName, FrozenDictionary<string, WaylandProtocol> interfaceToProtocolDict) =>
+        private static MemberAccessExpressionSyntax GetWlInterfaceVersionFor(string wlInterfaceName, WaylandProtocol wlProtocol, FrozenDictionary<string, WaylandProtocol> interfaceToProtocolDict) =>
             MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
                 MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression,
-                    GetQualifiedClassType(wlInterfaceName, interfaceToProtocolDict),
+                    GetQualifiedClassType(wlInterfaceName, wlProtocol, interfaceToProtocolDict),
                     IdentifierName("WlInterface")), IdentifierName("Version"));
 
         private static readonly string[] _keywords =

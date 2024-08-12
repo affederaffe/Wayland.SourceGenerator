@@ -12,7 +12,7 @@ namespace Wayland.SourceGenerator
 {
     public static partial class WaylandSourceGenerator
     {
-        public static ClassDeclarationSyntax WithSignature(this ClassDeclarationSyntax cl, WaylandInterface wlInterface, FrozenDictionary<string, WaylandProtocol> interfaceToProtocolDict)
+        public static ClassDeclarationSyntax WithSignature(this ClassDeclarationSyntax cl, WaylandInterface wlInterface, WaylandProtocol wlProtocol, FrozenDictionary<string, WaylandProtocol> interfaceToProtocolDict)
         {
             AttributeListSyntax attributeList = AttributeList(
                 SingletonSeparatedList(
@@ -37,8 +37,8 @@ namespace Wayland.SourceGenerator
                         MakeLiteralExpression(wlInterface.Name)),
                     Argument(
                         MakeLiteralExpression(wlInterface.Version)),
-                    GenerateWlMessageList(wlInterface.Requests, interfaceToProtocolDict),
-                    GenerateWlMessageList(wlInterface.Events, interfaceToProtocolDict)]));
+                    GenerateWlMessageList(wlInterface.Requests, wlProtocol, interfaceToProtocolDict),
+                    GenerateWlMessageList(wlInterface.Events, wlProtocol, interfaceToProtocolDict)]));
 
             ConstructorDeclarationSyntax staticCtor = ConstructorDeclaration(cl.Identifier)
                 .WithModifiers(
@@ -67,19 +67,19 @@ namespace Wayland.SourceGenerator
                     Block(
                         SingletonList<StatementSyntax>(
                             ReturnStatement(
-                                GetWlInterfaceAddressFor(wlInterface.Name, interfaceToProtocolDict)))));
+                                GetWlInterfaceAddressFor(wlInterface.Name, wlProtocol, interfaceToProtocolDict)))));
 
             cl = cl.AddMembers(signatureField, staticCtor, method);
 
             return cl;
         }
 
-        private static ArgumentSyntax GenerateWlMessageList(ReadOnlySpan<WaylandProtocolMessage> messages, FrozenDictionary<string, WaylandProtocol> interfaceToProtocolDict)
+        private static ArgumentSyntax GenerateWlMessageList(ReadOnlySpan<WaylandProtocolMessage> messages, WaylandProtocol wlProtocol, FrozenDictionary<string, WaylandProtocol> interfaceToProtocolDict)
         {
             SeparatedSyntaxList<ExpressionSyntax> elements = [];
 
             foreach (WaylandProtocolMessage msg in messages)
-                elements = elements.Add(GenerateWlMessage(msg, interfaceToProtocolDict));
+                elements = elements.Add(GenerateWlMessage(msg, wlProtocol, interfaceToProtocolDict));
 
             return Argument(
                 ArrayCreationExpression(
@@ -91,7 +91,7 @@ namespace Wayland.SourceGenerator
                     InitializerExpression(SyntaxKind.ArrayInitializerExpression, elements)));
         }
 
-        private static ObjectCreationExpressionSyntax GenerateWlMessage(WaylandProtocolMessage wlMessage, FrozenDictionary<string, WaylandProtocol> interfaceToProtocolDict)
+        private static ObjectCreationExpressionSyntax GenerateWlMessage(WaylandProtocolMessage wlMessage, WaylandProtocol wlProtocol, FrozenDictionary<string, WaylandProtocol> interfaceToProtocolDict)
         {
             StringBuilder signature = new();
 
@@ -119,7 +119,7 @@ namespace Wayland.SourceGenerator
 
                     interfaceList = interfaceList.Add(
                         arg.Interface is not null
-                            ? GetWlInterfaceAddressFor(arg.Interface, interfaceToProtocolDict)
+                            ? GetWlInterfaceAddressFor(arg.Interface, wlProtocol, interfaceToProtocolDict)
                             : MakeNullLiteralExpression());
                 }
             }

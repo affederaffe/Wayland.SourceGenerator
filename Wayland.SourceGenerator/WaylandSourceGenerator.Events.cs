@@ -79,7 +79,7 @@ namespace Wayland.SourceGenerator
 
                             if (wlArgument.Enum is not null)
                             {
-                                parameterType = GetQualifiedEnumType(wlArgument.Enum, interfaceToProtocolDict);
+                                parameterType = GetQualifiedEnumType(wlArgument.Enum, wlProtocol, interfaceToProtocolDict);
                                 argument = CastExpression(parameterType, argument);
                             }
 
@@ -119,7 +119,7 @@ namespace Wayland.SourceGenerator
                         case WaylandArgumentTypes.Object:
                             parameterType = wlArgument.Interface is null
                                 ? IdentifierName("WlProxy")
-                                : GetQualifiedClassType(wlArgument.Interface, interfaceToProtocolDict);
+                                : GetQualifiedClassType(wlArgument.Interface, wlProtocol, interfaceToProtocolDict);
 
                             if (wlArgument.AllowNull)
                                 parameterType = NullableType(parameterType);
@@ -136,7 +136,7 @@ namespace Wayland.SourceGenerator
                                                 MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, argumentAt, IdentifierName("IntPtr"))))));
                             break;
                         case WaylandArgumentTypes.NewId:
-                            parameterType = GetQualifiedClassType(wlArgument.Interface!, interfaceToProtocolDict);
+                            parameterType = GetQualifiedClassType(wlArgument.Interface!, wlProtocol, interfaceToProtocolDict);
                             argument = ObjectCreationExpression(parameterType)
                                 .AddArgumentListArguments(
                                     Argument(

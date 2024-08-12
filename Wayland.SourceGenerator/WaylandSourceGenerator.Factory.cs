@@ -9,7 +9,7 @@ namespace Wayland.SourceGenerator
 {
     public static partial class WaylandSourceGenerator
     {
-        internal static ClassDeclarationSyntax WithFactory(this ClassDeclarationSyntax cl, WaylandInterface wlInterface, FrozenDictionary<string,WaylandProtocol> interfaceToProtocolDict)
+        internal static ClassDeclarationSyntax WithFactory(this ClassDeclarationSyntax cl, WaylandInterface wlInterface, WaylandProtocol wlProtocol, FrozenDictionary<string,WaylandProtocol> interfaceToProtocolDict)
         {
             TypeSyntax factoryInterfaceType = GenericName("IBindFactory")
                 .WithTypeArgumentList(
@@ -37,7 +37,7 @@ namespace Wayland.SourceGenerator
                         .WithBody(
                             Block(
                                 ReturnStatement(
-                                    GetWlInterfaceAddressFor(wlInterface.Name, interfaceToProtocolDict)))),
+                                    GetWlInterfaceAddressFor(wlInterface.Name, wlProtocol, interfaceToProtocolDict)))),
                     MethodDeclaration(
                             IdentifierName(cl.Identifier),
                             "Create")
