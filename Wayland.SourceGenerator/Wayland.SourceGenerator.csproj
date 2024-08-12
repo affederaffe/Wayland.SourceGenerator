@@ -4,17 +4,42 @@
         <TargetFramework>netstandard2.0</TargetFramework>
         <LangVersion>latest</LangVersion>
         <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <DevelopmentDependency>true</DevelopmentDependency>
         <IsRosylnComponent>true</IsRosylnComponent>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>sign.snk</AssemblyOriginatorKeyFile>
+        <PublicSign>true</PublicSign>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <Version>0.0.1</Version>
+        <PackageId>Wayland.SourceGenerator</PackageId>
+        <Authors>affederaffe</Authors>
+        <Copyright>affederaffe</Copyright>
+        <Description>A source generator that generates bindings for libwayland</Description>
+        <PackageTags>Wayland;SourceGenerator</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/affederaffe/Wayland.SourceGenerator</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/affederaffe/Wayland.SourceGenerator</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all"/>
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.10.0" PrivateAssets="all"/>
+    </ItemGroup>
+
+     <ItemGroup>
+        <None Include="../README.md" Pack="true" PackagePath="/" />
+        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\$(AssemblyName).pdb" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
 
 </Project>
