@@ -14,8 +14,7 @@
     </ItemGroup>
     
     <ItemGroup>
-        <AdditionalFiles Include="WaylandXml/wayland-protocols/**/*.xml" />
-        <AdditionalFiles Include="WaylandXml/wayland.xml" />
+        <AdditionalFiles Include="./**/*.xml" />
     </ItemGroup>
 
 </Project>
