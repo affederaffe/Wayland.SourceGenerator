@@ -61,8 +61,8 @@ namespace Wayland.SourceGenerator
                     foreach (WaylandArgument wlArgument in wlRequest.Arguments)
                     {
                         TypeSyntax? parameterType = null;
-                        string argumentName = SanitizeIdentifier(
-                            Pascalize(wlArgument.Name.AsSpan(), true));
+                        string argumentName = Pascalize(
+                            SanitizeIdentifier(wlArgument.Name).AsSpan(), true);
 
                         switch (wlArgument.Type)
                         {

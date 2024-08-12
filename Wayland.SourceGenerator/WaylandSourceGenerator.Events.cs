@@ -151,19 +151,20 @@ namespace Wayland.SourceGenerator
                     parameters = parameters.Add(
                         Parameter(
                                 Identifier(
-                                    SanitizeIdentifier(wlArgument.Name)))
+                                    Pascalize(
+                                        SanitizeIdentifier(wlArgument.Name).AsSpan(), true)))
                             .WithType(parameterType));
 
                     arguments = arguments.Add(
                         Argument(argument));
                 }
 
-                string eventName = Pascalize(wlEvent.Name.AsSpan());
+                string methodName = $"On{Pascalize(wlEvent.Name.AsSpan())}";
 
                 MethodDeclarationSyntax method = MethodDeclaration(
                         PredefinedType(
                             Token(SyntaxKind.VoidKeyword)),
-                        eventName)
+                        methodName)
                     .WithParameterList(
                         ParameterList(parameters));
 
@@ -187,7 +188,7 @@ namespace Wayland.SourceGenerator
                                     IdentifierName("Events"),
                                     InvocationExpression(
                                             MemberBindingExpression(
-                                                IdentifierName(eventName)))
+                                                IdentifierName(methodName)))
                                         .WithArgumentList(
                                             ArgumentList(arguments)))),
                             BreakStatement()));
